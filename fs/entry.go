@@ -13,6 +13,8 @@ import (
 )
 
 type Entry struct {
+	ID          string            `json:"id"`
+	ParentID    string            `json:"parentId"`
 	Path        string            `json:"path"`
 	SymlinkPath string            `json:"symlinkPath"`
 	Size        int64             `json:"size"`
@@ -21,12 +23,14 @@ type Entry struct {
 	Sha1        string            `json:"sha1"`
 	Sha256      string            `json:"sha256"`
 	Sha512      string            `json:"sha512"`
-	Parent      string            `json:"parent"`
 	Extracted   bool              `json:"extracted"`
 	Mode        os.FileMode       `json:"mode"`
 	tmpPath     string
 }
 
+func NewEntry(path string, mode os.FileMode, parentId string) (*Entry) {
+  return &Entry{ID: uuid.New().String(), Path: path, Mode: mode, ParentID: parentId}
+}
 
 func (e *Entry) ExtractedDirectory(name string, mode os.FileMode) (error) {
   fullPath := FullPath(e.extractedPath(name))
@@ -37,7 +41,7 @@ func (e *Entry) ExtractedDirectory(name string, mode os.FileMode) (error) {
 func (e *Entry) ExtractedFile(name string, mode os.FileMode, reader io.Reader) (*Entry, error) {
   path := e.extractedPath(name)
   log.Debugf("Extracting File %v (%v)", path, mode)
-	newEnt := &Entry{Path: path, Parent: e.Path, Mode: mode}
+	newEnt := NewEntry(path, mode, e.ID)
 
   if err := newEnt.mkdirAll(); err != nil {
 		return nil, err
@@ -54,7 +58,7 @@ func (e *Entry) ExtractedFile(name string, mode os.FileMode, reader io.Reader) (
 func (e *Entry) ExtractedSymlink(name string, mode os.FileMode, target string) (*Entry, error) {
   path := e.extractedPath(name)
   log.Debugf("Extracting Link %v (%v)", path, mode)
-  newEnt := &Entry{Path: path, Parent: e.Path, Mode: mode}
+  newEnt := NewEntry(path, mode, e.ID)
 
   if err := newEnt.mkdirAll(); err != nil {
 		return nil, err
