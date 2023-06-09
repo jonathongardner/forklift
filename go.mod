@@ -6,6 +6,7 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.2
 	github.com/google/uuid v1.3.0
 	github.com/sirupsen/logrus v1.9.0
+	github.com/ulikunitz/xz v0.5.11
 	github.com/urfave/cli/v2 v2.25.3
 )
 
