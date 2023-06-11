@@ -19,12 +19,13 @@ type Barcode struct {
 }
 
 func NewBarcode(pathToExtract string) (*Barcode, error) {
+	// defaults
 	reader := os.Stdin
 	mode := os.FileMode(0700)
+	path := "forklift"
 
-	if pathToExtract == "" {
-		pathToExtract = "forklift"
-	} else {
+	if pathToExtract != "" {
+		path = filepath.Base(pathToExtract)
 		fileToCopy, err := os.Open(pathToExtract)
 		if err != nil {
 			return nil, fmt.Errorf("Couldn't open path (%v) - %v", pathToExtract, err)
@@ -35,16 +36,16 @@ func NewBarcode(pathToExtract string) (*Barcode, error) {
 		if err != nil {
 			return nil, fmt.Errorf("Couldn't get path info (%v) - %v", pathToExtract, err)
 		}
+		mode = mode | fileInfo.Mode()
 
 		if fileInfo.IsDir() {
 			return nil, fmt.Errorf("Must provide a file (not a directory)")
 		}
 		reader = fileToCopy
-		mode = mode | fileInfo.Mode()
 	}
 
 	parentEnt := &fs.Entry{Path: ""}
-	ent, err := parentEnt.ExtractedFile(filepath.Base(pathToExtract), mode, reader)
+	ent, err := parentEnt.ExtractedFile(path, mode, reader)
 	if err != nil {
 		return nil, fmt.Errorf("Error extracting file - %v", err)
 	}
@@ -60,6 +61,12 @@ func (b *Barcode) addToManifest() {
 func (b *Barcode) Run(rc *routines.Controller) error {
 	defer b.addToManifest()
 	e := b.entry
+
+	if e.Processed {
+		// dont process if already done, this can happen if extractor auto processes dir
+		return nil
+	}
+	e.Processed = true
 
 	if e.SymlinkPath != "" {
 		// dont process symlinks cause we will process actual file

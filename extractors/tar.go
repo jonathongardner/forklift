@@ -12,14 +12,16 @@ import (
 
 const TarMtype = "application/x-tar"
 
-func tarExtract(entry *fs.Entry) ([]*fs.Entry, error) {
-	toReturn := make([]*fs.Entry, 0)
-	file, err := entry.OpenTmp()
+func tarExtract(toExtract *fs.Entry) ([]*fs.Entry, error) {
+	file, err := toExtract.OpenTmp()
 	if err != nil {
-		return toReturn, err
+		return nil, err
 	}
 	defer file.Close()
 
+	fileEntryMapping := make(map[string]*fs.Entry)
+	// include this one so we can set parent
+	fileEntryMapping[toExtract.FullPath()] = toExtract
 	tarReader := tar.NewReader(file)
 	for {
 		header, err := tarReader.Next()
@@ -29,37 +31,40 @@ func tarExtract(entry *fs.Entry) ([]*fs.Entry, error) {
 		}
 
 		if err != nil {
-			return toReturn, err
+			return nil, err
 		}
 
 		mode := os.FileMode(header.Mode)
 
 		switch header.Typeflag {
 		case tar.TypeDir:
-			if err := entry.ExtractedDirectory(header.Name, mode); err != nil {
-				return toReturn, err
+			newEntry, err := toExtract.ExtractedDirectory(header.Name, mode)
+			if err != nil {
+				return nil, err
 			}
+			fileEntryMapping[newEntry.FullPath()] = newEntry
 		case tar.TypeReg:
-			newEntry, err := entry.ExtractedFile(header.Name, mode, tarReader)
+			newEntry, err := toExtract.ExtractedFile(header.Name, mode, tarReader)
 			if err != nil {
-				return toReturn, err
+				return nil, err
 			}
 
-			toReturn = append(toReturn, newEntry)
+			fileEntryMapping[newEntry.FullPath()] = newEntry
 		case tar.TypeSymlink:
-			newEntry, err := entry.ExtractedSymlink(header.Name, mode, header.Linkname)
+			newEntry, err := toExtract.ExtractedSymlink(header.Name, mode, header.Linkname)
 			if err != nil {
-				return toReturn, err
+				return nil, err
 			}
 
-			toReturn = append(toReturn, newEntry)
+			fileEntryMapping[newEntry.FullPath()] = newEntry
 		case tar.TypeLink:
-			return toReturn, fmt.Errorf("Hardlink %v %v", header.Typeflag, header.Name)
+			return nil, fmt.Errorf("Hardlink %v %v", header.Typeflag, header.Name)
 		default:
-			return toReturn, fmt.Errorf("Unknown header type %v %v", header.Typeflag, header.Name)
+			return nil, fmt.Errorf("Unknown header type %v %v", header.Typeflag, header.Name)
 		}
 	}
-	return toReturn, nil
+
+	return mapEntriesToFiles(toExtract, fileEntryMapping)
 }
 
 func init() {

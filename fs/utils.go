@@ -16,6 +16,14 @@ import (
 	// log "github.com/sirupsen/logrus"
 )
 
+
+func (e *Entry) FullPath() string {
+  return FullPath(e.Path)
+}
+
+func (e *Entry) FullPathDir() string {
+  return FullPathDir(e.Path)
+}
 // Makes base directories
 func (e *Entry) mkdirAll() (error) {
 	// 0o001 allow reading in directory

@@ -1,6 +1,9 @@
 package extractors
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/jonathongardner/forklift/fs"
 	// log "github.com/sirupsen/logrus"
 )
@@ -48,3 +51,27 @@ func matchSigMultiOffsetFunc(toMatch []byte, offsets []int) (func(raw []byte, li
 	}
 }
 //---------------Sig--------------
+
+func mapEntriesToFiles(entry *fs.Entry, entries map[string]*fs.Entry) ([]*fs.Entry, error) {
+	toReturn := make([]*fs.Entry, 0)
+	root := entry.FullPath()
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if root == path {
+			return nil
+		}
+
+		ent := entries[path]
+		if info.IsDir() {
+			ent.Processed = true
+			ent.Extracted = true
+		}
+		ent.UpdateParent(entries[ent.FullPathDir()])
+		toReturn = append(toReturn, ent)
+		return nil
+	})
+
+	return toReturn, err
+}

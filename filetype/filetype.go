@@ -19,6 +19,8 @@ type Filetype struct {
 	Mimetype  string `json:"mimetype"`
 }
 
+var Dir = Filetype{Extension: "dir", Mimetype: "directory/directory"}
+
 func newFiletype(mtype *mimetype.MIME) Filetype {
 	return Filetype{Extension: mtype.Extension(), Mimetype: mtype.String()}
 }
