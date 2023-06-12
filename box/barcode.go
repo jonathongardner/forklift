@@ -39,7 +39,7 @@ func NewBarcode(pathToExtract string) (*Barcode, error) {
 		mode = mode | fileInfo.Mode()
 
 		if fileInfo.IsDir() {
-			return nil, fmt.Errorf("Must provide a file (not a directory)")
+			return &Barcode{entry: fs.NewDirEntry(path, mode)}, nil
 		}
 		reader = fileToCopy
 	}
