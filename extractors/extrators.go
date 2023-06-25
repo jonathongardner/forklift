@@ -1,6 +1,7 @@
 package extractors
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -19,39 +20,6 @@ func addExtractor(mtype string, ext extratFunc) {
 	Types = append(Types, mtype)
 }
 
-//---------------Sig--------------
-func matchSig(raw []byte, toMatch []byte, offset int) bool {
-	if (len(raw) < offset + len(toMatch)) {
-		return false
-	}
-
-	for i := 0; i < len(toMatch); i++ {
-		if (raw[offset + i] != toMatch[i]) {
-			return false
-		}
-	}
-
-	return true
-}
-
-func matchSigFunc(toMatch []byte, offset int) (func(raw []byte, limit uint32) bool) {
-	return func(raw []byte, limit uint32) bool {
-		return matchSig(raw, toMatch, offset)
-	}
-}
-
-func matchSigMultiOffsetFunc(toMatch []byte, offsets []int) (func(raw []byte, limit uint32) bool) {
-	return func(raw []byte, limit uint32) bool {
-		for i := 0; i < len(offsets); i++ {
-			if matchSig(raw, toMatch, offsets[i]) {
-				return true
-			}
-		}
-		return false
-	}
-}
-//---------------Sig--------------
-
 func mapEntriesToFiles(entry *fs.Entry, entries map[string]*fs.Entry) ([]*fs.Entry, error) {
 	toReturn := make([]*fs.Entry, 0)
 	root := entry.FullPath()
@@ -63,7 +31,10 @@ func mapEntriesToFiles(entry *fs.Entry, entries map[string]*fs.Entry) ([]*fs.Ent
 			return nil
 		}
 
-		ent := entries[path]
+		ent, ok := entries[path]
+		if !ok {
+			return fmt.Errorf("entry not found for %s", path)
+		}
 		if info.IsDir() {
 			ent.Processed = true
 			ent.Extracted = true

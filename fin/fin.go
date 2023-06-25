@@ -13,10 +13,10 @@ type runner struct {
 	entry chan []byte
 	file  *os.File
 }
-var aRunner *runner
-var running = false
 
-func Setup(path string, rc *routines.Controller) (error) {
+var aRunner *runner
+
+func Setup(path string, rc *routines.Controller) error {
 	if path == "" {
 		log.Debug("No manifest skipping")
 		return nil
@@ -32,19 +32,20 @@ func Setup(path string, rc *routines.Controller) (error) {
 		return fmt.Errorf("error opneing file (%v - %v)", path, err)
 	}
 
-	aRunner = &runner{ entry: make(chan []byte), file: file }
-	running = true
+	aRunner = &runner{entry: make(chan []byte), file: file}
 	rc.GoBackground(aRunner)
 
 	return nil
 }
+
 // only run one cause dont want mulitple sqlite dbs open
 func (r *runner) Run(rc *routines.Controller) error {
 	log.Debug("Starting fin")
 	count := uint64(0)
-	f1: for {
+f1:
+	for {
 		select {
-		case e := <- r.entry:
+		case e := <-r.entry:
 			_, err := r.file.Write(e)
 			if err != nil {
 				log.Errorf("Error writing to manifest %v", err)
@@ -55,10 +56,10 @@ func (r *runner) Run(rc *routines.Controller) error {
 			}
 
 			count += 1
-			if count % 100 == 0 {
+			if count%100 == 0 {
 				log.Debugf("Processed %v", count)
 			}
-		case <- rc.IsDone():
+		case <-rc.IsDone():
 			log.Debugf("Finished - Processed %v", count)
 			break f1
 		}
@@ -68,7 +69,7 @@ func (r *runner) Run(rc *routines.Controller) error {
 }
 
 func AddFile(e []byte) {
-	if running {
+	if aRunner != nil {
 		aRunner.entry <- e
 	}
 }
