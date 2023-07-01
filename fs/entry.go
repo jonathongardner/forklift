@@ -1,15 +1,15 @@
 package fs
 
 import (
-  "fmt"
-  "io"
-  "os"
-  "path/filepath"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 
-  "github.com/jonathongardner/forklift/filetype"
+	"github.com/jonathongardner/forklift/filetype"
 
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
-  "github.com/google/uuid"
 )
 
 type Entry struct {
@@ -24,59 +24,55 @@ type Entry struct {
 	Sha256      string            `json:"sha256"`
 	Sha512      string            `json:"sha512"`
 	Extracted   bool              `json:"extracted"` // We were able to extract further
-  Processed   bool                                 // We already checked if file was extractable
 	Mode        os.FileMode       `json:"mode"`
 	tmpPath     string
 }
 
-func NewDirEntry(path string, mode os.FileMode) (*Entry) {
-  return &Entry{ID: uuid.New().String(), Path: path, Mode: mode, Type: filetype.Dir, Extracted: false}
+func NewDirEntry(path string, mode os.FileMode) *Entry {
+	return &Entry{ID: uuid.New().String(), Path: path, Mode: mode | DIR_RWX, Type: filetype.Dir, Extracted: false}
 }
 
-func NewEntryWithParent(path string, mode os.FileMode, parentId string) (*Entry) {
-  return &Entry{ID: uuid.New().String(), Path: path, Mode: mode, ParentID: parentId, Extracted: false}
-}
-
-func (e *Entry) UpdateParent(entry *Entry) {
-  e.ParentID = entry.ID
+func NewEntryWithParent(path string, mode os.FileMode, parentId string) *Entry {
+	return &Entry{ID: uuid.New().String(), Path: path, Mode: mode, ParentID: parentId, Extracted: false}
 }
 
 func (e *Entry) ExtractedDirectory(name string, mode os.FileMode) (*Entry, error) {
-  path := e.extractedPath(name)
-  log.Debugf("Extracting Dir %v (%v)", path, mode)
-  newEnt := NewDirEntry(path, mode)
-  newEnt.ParentID = e.ID
-  return newEnt, os.MkdirAll(FullPath(path), mode)
+	path := e.extractedPath(name)
+	log.Debugf("Extracting Dir %v (%v)", path, mode)
+	newEnt := NewDirEntry(path, mode)
+	newEnt.ParentID = e.ID
+	return newEnt, mkdirAll(FullPath(path), mode)
 }
 
 func (e *Entry) ExtractedFile(name string, mode os.FileMode, reader io.Reader) (*Entry, error) {
-  path := e.extractedPath(name)
-  log.Debugf("Extracting File %v (%v)", path, mode)
+	path := e.extractedPath(name)
+	log.Debugf("Extracting File %v (%v)", path, mode)
 	newEnt := NewEntryWithParent(path, mode, e.ID)
 
-  if err := newEnt.mkdirAll(); err != nil {
+	if err := newEnt.mkdirAll(); err != nil {
 		return nil, err
 	}
 
-  err := newEnt.createAndSetEntryInfo(reader)
+	err := newEnt.createAndSetEntryInfo(reader)
 	if err != nil {
 		return nil, err
 	}
 
-  return newEnt, nil
+	return newEnt, nil
 }
 
 func (e *Entry) ExtractedSymlink(name string, mode os.FileMode, target string) (*Entry, error) {
-  path := e.extractedPath(name)
-  log.Debugf("Extracting Link %v (%v)", path, mode)
-  newEnt := NewEntryWithParent(path, mode, e.ID)
+	path := e.extractedPath(name)
+	log.Debugf("Extracting Link %v (%v)", path, mode)
+	newEnt := NewEntryWithParent(path, mode, e.ID)
+	newEnt.Type = filetype.Symlink
 
-  if err := newEnt.mkdirAll(); err != nil {
+	if err := newEnt.mkdirAll(); err != nil {
 		return nil, err
 	}
-  // if target is absolute then take into account where this is being extracted
+	// if target is absolute then take into account where this is being extracted
 	if filepath.IsAbs(target) {
-    // WEIRD: This is different then path, which doesnt include the `full`
+		// WEIRD: This is different then path, which doesnt include the `full`
 		newEnt.SymlinkPath = FullPath(e.extractedPath(target))
 	} else { // if its relative dont need to change anything
 		newEnt.SymlinkPath = target
@@ -86,29 +82,33 @@ func (e *Entry) ExtractedSymlink(name string, mode os.FileMode, target string) (
 	if err != nil {
 		return nil, err
 	}
-  return newEnt, nil
+	return newEnt, nil
 }
 
-
-//-------------------Tmp--------------------
-func (e *Entry) MoveToTmp() (error) {
+// -------------------Tmp--------------------
+func (e *Entry) MoveToTmp() error {
 	if e.tmpPath != "" {
 		return fmt.Errorf("Already moved to tmp")
 	}
 
 	e.tmpPath = uuid.New().String()
-  return os.Rename(FullPath(e.Path), TmpPath(e.tmpPath))
+	return os.Rename(FullPath(e.Path), e.TmpPath())
 }
 
-func (e *Entry) RemoveTmp() (error) {
+func (e *Entry) RemoveTmp() error {
 	if e.tmpPath == "" {
 		return fmt.Errorf("Already deleted tmp")
 	}
 
-  return os.Remove(TmpPath(e.tmpPath))
+	return os.Remove(e.TmpPath())
 }
 
 func (e *Entry) OpenTmp() (*os.File, error) {
-  return os.Open(TmpPath(e.tmpPath))
+	return os.Open(e.TmpPath())
 }
+
+func (e *Entry) TmpPath() string {
+	return TmpPath(e.tmpPath)
+}
+
 //-------------------Tmp--------------------

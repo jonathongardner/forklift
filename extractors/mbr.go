@@ -7,8 +7,9 @@ import (
 
 const MbrMtype = "application/octet-stream;mbr=true"
 
+// TODO: add mbr extractors
+
 func init() {
-	mbrDetector := matchSigFunc([]byte{0x55, 0xAA}, 510) // 0x55AA
-	mimetype.Extend(mbrDetector, MbrMtype, ".img")
+	mimetype.Extend(matchSigFunc([]byte{0x55, 0xAA}, 510), MbrMtype, ".img")
 	// addExtractor(MbrMtype, mbrExtract)
 }

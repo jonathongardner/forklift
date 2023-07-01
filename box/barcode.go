@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 
 	"github.com/jonathongardner/forklift/extractors"
-	"github.com/jonathongardner/forklift/fs"
 	"github.com/jonathongardner/forklift/fin"
+	"github.com/jonathongardner/forklift/fs"
 	"github.com/jonathongardner/forklift/routines"
 
 	log "github.com/sirupsen/logrus"
@@ -21,7 +21,7 @@ type Barcode struct {
 func NewBarcode(pathToExtract string) (*Barcode, error) {
 	// defaults
 	reader := os.Stdin
-	mode := os.FileMode(0700)
+	mode := fs.DIR_RWX
 	path := "forklift"
 
 	if pathToExtract != "" {
@@ -62,17 +62,6 @@ func (b *Barcode) Run(rc *routines.Controller) error {
 	defer b.addToManifest()
 	e := b.entry
 
-	if e.Processed {
-		// dont process if already done, this can happen if extractor auto processes dir
-		return nil
-	}
-	e.Processed = true
-
-	if e.SymlinkPath != "" {
-		// dont process symlinks cause we will process actual file
-		return nil
-	}
-
 	if e.Type.Mimetype == "" {
 		// We should set the initial type when we copy the file
 		panic("Types cant be blank")
@@ -91,7 +80,7 @@ func (b *Barcode) Run(rc *routines.Controller) error {
 			return fmt.Errorf("Error extraction file %v %v - %v", e.Path, e.Type, err)
 		}
 		for _, entry := range entries {
-			rc.Go(&Barcode{ entry: entry })
+			rc.Go(&Barcode{entry: entry})
 		}
 
 		err = e.RemoveTmp()

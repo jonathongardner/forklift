@@ -20,6 +20,7 @@ type Filetype struct {
 }
 
 var Dir = Filetype{Extension: "dir", Mimetype: "directory/directory"}
+var Symlink = Filetype{Extension: "dir", Mimetype: "directory/directory"}
 
 func newFiletype(mtype *mimetype.MIME) Filetype {
 	return Filetype{Extension: mtype.Extension(), Mimetype: mtype.String()}
