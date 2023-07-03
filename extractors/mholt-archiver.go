@@ -26,7 +26,7 @@ const ZipMtype = "application/zip"     // .zip
 const TarMtype = "application/x-tar"   // .tar (including any compressed variants like .tar.gz)
 const RarMtyep = "application/vnd.rar" // .rar (read-only)
 
-func symlinkTar(toExtract *fs.Entry, path string, fileinfo realFs.FileInfo) (*fs.Entry, error) {
+func symlinkArchiver(toExtract *fs.Entry, path string, fileinfo realFs.FileInfo) (*fs.Entry, error) {
 	mode := fileinfo.Mode()
 	if mode&realFs.ModeSymlink == 0 {
 		return nil, fmt.Errorf("Unknown file type %v", mode)
@@ -41,7 +41,7 @@ func tarZipRarEtcExtract(toExtract *fs.Entry) ([]*fs.Entry, error) {
 		return nil, err
 	}
 
-	return walkXtract(toExtract, fsys, symlinkTar)
+	return walkXtract(toExtract, fsys, symlinkArchiver)
 }
 
 func init() {
