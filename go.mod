@@ -3,6 +3,7 @@ module github.com/jonathongardner/forklift
 go 1.20
 
 require (
+	github.com/diskfs/go-diskfs v1.3.0
 	github.com/gabriel-vasile/mimetype v1.4.2
 	github.com/google/uuid v1.3.0
 	github.com/masahiro331/go-ext4-filesystem v0.0.0-20230612143131-27ccd485b7a1
@@ -26,7 +27,9 @@ require (
 	github.com/klauspost/pgzip v1.2.5 // indirect
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40 // indirect
 	github.com/nwaples/rardecode/v2 v2.0.0-beta.2 // indirect
+	github.com/pierrec/lz4 v2.3.0+incompatible // indirect
 	github.com/pierrec/lz4/v4 v4.1.15 // indirect
+	github.com/pkg/xattr v0.4.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/therootcompany/xz v1.0.1 // indirect
 	github.com/ulikunitz/xz v0.5.11 // indirect
@@ -39,4 +42,5 @@ require (
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	gopkg.in/djherbis/times.v1 v1.2.0 // indirect
 )

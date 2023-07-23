@@ -13,7 +13,7 @@ import (
 
 const Ext4Mtype = "application/x-brotli" // brotli (br)
 
-func symlinkExt4(toExtract *fs.Entry, path string, fileinfo realFs.FileInfo) (*fs.Entry, error) {
+func callbackExt4(toExtract *fs.Entry, path string, fileinfo realFs.FileInfo) (*fs.Entry, error) {
 	return nil, fmt.Errorf("Unknown file type %v", fileinfo.Mode())
 }
 
@@ -49,7 +49,7 @@ func ext4Extract(toExtract *fs.Entry) ([]*fs.Entry, error) {
 		return nil, err
 	}
 
-	return walkXtract(toExtract, filesystem, symlinkExt4)
+	return walkXtract(toExtract, filesystem, callbackExt4)
 }
 
 func init() {
