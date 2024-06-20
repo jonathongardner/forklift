@@ -3,38 +3,39 @@ package cli
 import (
 	"fmt"
 	"os"
+
 	"github.com/jonathongardner/forklift/app"
 
-	"github.com/urfave/cli/v2"
 	log "github.com/sirupsen/logrus"
+	"github.com/urfave/cli/v2"
 )
 
-
-func Run() (error) {
+func Run() error {
 	cli.VersionPrinter = func(c *cli.Context) {
 		fmt.Println(c.App.Version)
 	}
 	cli.VersionFlag = &cli.BoolFlag{
-		Name: "version",
+		Name:  "version",
 		Usage: "print the version",
 	}
 
-	flags := []cli.Flag {
+	flags := []cli.Flag{
 		&cli.BoolFlag{
-			Name: "verbose",
+			Name:    "verbose",
 			Aliases: []string{"v"},
-			Usage: "logging level",
+			Usage:   "logging level",
 		},
 	}
 
-
 	app := &cli.App{
-		Name: "forklift",
+		Name:    "forklift",
 		Version: app.Version,
-		Usage: "Tool for extracting archives.",
+		Usage:   "Tool for extracting archives.",
 		Commands: []*cli.Command{
 			filetypeCommand,
 			extractCommand,
+			testCommand,
+			fibCommand,
 		},
 		Flags: flags,
 		Before: func(c *cli.Context) error {

@@ -3,57 +3,54 @@ package cli
 import (
 	// "fmt"
 
-	"github.com/jonathongardner/forklift/fin"
-	"github.com/jonathongardner/forklift/fs"
+	"fmt"
+
 	"github.com/jonathongardner/forklift/box"
 	"github.com/jonathongardner/forklift/routines"
+	"github.com/jonathongardner/virtualfs"
 
-	"github.com/urfave/cli/v2"
 	log "github.com/sirupsen/logrus"
+	"github.com/urfave/cli/v2"
 )
 
-var extractCommand =  &cli.Command{
+var extractCommand = &cli.Command{
 	Name:      "extract",
 	Usage:     "extract files",
 	ArgsUsage: "[file]",
-	Flags: []cli.Flag {
-		&cli.StringFlag{
-			Name:    "manifest",
-			Aliases: []string{"m"},
-			Usage:   "manifest output (jsonl format)",
-			EnvVars: []string{"FORKLIFT_MANIFEST"},
-		},
-		&cli.StringFlag{
-			Name:    "output",
-			Aliases: []string{"o"},
-			Usage:   "output folder",
-			Value:   fs.Path,
-			EnvVars: []string{"FORKLIFT_OUTPUT"},
-		},
+	Flags: []cli.Flag{
+		output,
 	},
-	Action:  func(c *cli.Context) error {
+	Action: func(c *cli.Context) error {
+		output := c.String("output")
 		file := c.Args().Get(0)
-		err := fs.SetupDir(c.String("output"), file)
-		if err != nil {
-			return err
-		}
-		defer fs.CleanupDir()
 
-		log.Infof("Starting to unload %v to %v...", file, fs.Path)
+		virtualFS, err := virtualfs.NewFs(output, file)
+		if err != nil {
+			return fmt.Errorf("unable to create virtual filesystem: %v", err)
+		}
+		// Need to close the virtualFS so it saves the database
+		defer virtualFS.Close()
+
+		// Create the DB to start recording info to
+		// db, err := fin.CreateDB(output)
+		// if err != nil {
+		// 	return err
+		// }
+
+		bar, err := box.NewDelivery(virtualFS)
+		if err != nil {
+			return fmt.Errorf("unable to start scanning: %v", err)
+		}
 
 		routineController := routines.NewController()
-		err = fin.Setup(c.String("manifest"), routineController)
-		if err != nil {
-			return err
-		}
-
-		bar, err := box.NewBarcode(file)
-		if err != nil {
-			return err
-		}
-
+		log.Infof("Starting to unload %v to %v...", file, output)
 		routineController.Go(bar)
 
-		return routineController.IsFinished()
+		err = routineController.IsFinished()
+		if err != nil {
+			return err
+		}
+
+		return virtualFS.ProcessError()
 	},
 }

@@ -4,18 +4,18 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jonathongardner/forklift/filetype"
+	"github.com/jonathongardner/virtualfs/filetype"
 
 	"github.com/urfave/cli/v2"
 	// log "github.com/sirupsen/logrus"
 )
 
-var filetypeCommand =  &cli.Command{
+var filetypeCommand = &cli.Command{
 	Name:      "filetype",
 	Usage:     "get filetype for file",
 	ArgsUsage: "[file]",
-	Flags: []cli.Flag {},
-	Action:  func(c *cli.Context) error {
+	Flags:     []cli.Flag{},
+	Action: func(c *cli.Context) error {
 		path := c.Args().Get(0)
 
 		reader := os.Stdin

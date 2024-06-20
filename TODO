@@ -1,0 +1,4 @@
+1. Add extractor
+1. Add binwalk on data types
+1. Handle extracted dir different mode then file for something like `.` or `/` on a disk `/` on disk might be fine since we might use paritiion name/number?
+1. Handle dir
