@@ -1,114 +1,95 @@
 package fs
 
 import (
-  "fmt"
-  "io"
-  "os"
-  "path/filepath"
+	"fmt"
+	"os"
+	"sync/atomic"
+	"time"
 
-  "github.com/jonathongardner/forklift/filetype"
-
-	log "github.com/sirupsen/logrus"
-  "github.com/google/uuid"
+	"github.com/jonathongardner/forklift/filetype"
 )
 
-type Entry struct {
-	ID          string            `json:"id"`
-	ParentID    string            `json:"parentId"`
-	Path        string            `json:"path"`
-	SymlinkPath string            `json:"symlinkPath"`
-	Size        int64             `json:"size"`
-	Type        filetype.Filetype `json:"type"`
-	Md5         string            `json:"md5"`
-	Sha1        string            `json:"sha1"`
-	Sha256      string            `json:"sha256"`
-	Sha512      string            `json:"sha512"`
-	Extracted   bool              `json:"extracted"` // We were able to extract further
-  Processed   bool                                 // We already checked if file was extractable
-	Mode        os.FileMode       `json:"mode"`
-	tmpPath     string
+var ErrAlreadyProcessed = fmt.Errorf("node already extracted")
+
+type entry struct {
+	Size      int64             `json:"size"`
+	Type      filetype.Filetype `json:"type"`
+	Md5       string            `json:"md5"`
+	Sha1      string            `json:"sha1"`
+	Sha256    string            `json:"sha256"`
+	Sha512    string            `json:"sha512"`
+	Entropy   float64           `json:"entropy"`
+	Processed *atomic.Bool      `json:"extracted"`
+	// SymlinkPath string            `json:"symlinkPath"`
+	// Archive     bool              `json:"archive"`
 }
 
-func NewDirEntry(path string, mode os.FileMode) (*Entry) {
-  return &Entry{ID: uuid.New().String(), Path: path, Mode: mode, Type: filetype.Dir, Extracted: false}
+func newEntry() *entry {
+	extracted := &atomic.Bool{}
+	extracted.Store(false)
+	return &entry{Processed: extracted}
 }
 
-func NewEntryWithParent(path string, mode os.FileMode, parentId string) (*Entry) {
-  return &Entry{ID: uuid.New().String(), Path: path, Mode: mode, ParentID: parentId, Extracted: false}
+func newDirEntry() *entry {
+	extracted := &atomic.Bool{}
+	extracted.Store(false)
+	return &entry{Type: filetype.Dir, Processed: extracted}
 }
 
-func (e *Entry) UpdateParent(entry *Entry) {
-  e.ParentID = entry.ID
-}
-
-func (e *Entry) ExtractedDirectory(name string, mode os.FileMode) (*Entry, error) {
-  path := e.extractedPath(name)
-  log.Debugf("Extracting Dir %v (%v)", path, mode)
-  newEnt := NewDirEntry(path, mode)
-  newEnt.ParentID = e.ID
-  return newEnt, os.MkdirAll(FullPath(path), mode)
-}
-
-func (e *Entry) ExtractedFile(name string, mode os.FileMode, reader io.Reader) (*Entry, error) {
-  path := e.extractedPath(name)
-  log.Debugf("Extracting File %v (%v)", path, mode)
-	newEnt := NewEntryWithParent(path, mode, e.ID)
-
-  if err := newEnt.mkdirAll(); err != nil {
-		return nil, err
+// Return old value, if old valud is true then it was already extracted
+// might should return an error for that?
+func (e *entry) process() error {
+	if e.Processed.Swap(true) {
+		return ErrAlreadyProcessed
 	}
-
-  err := newEnt.createAndSetEntryInfo(reader)
-	if err != nil {
-		return nil, err
-	}
-
-  return newEnt, nil
+	return nil
 }
 
-func (e *Entry) ExtractedSymlink(name string, mode os.FileMode, target string) (*Entry, error) {
-  path := e.extractedPath(name)
-  log.Debugf("Extracting Link %v (%v)", path, mode)
-  newEnt := NewEntryWithParent(path, mode, e.ID)
-
-  if err := newEnt.mkdirAll(); err != nil {
-		return nil, err
-	}
-  // if target is absolute then take into account where this is being extracted
-	if filepath.IsAbs(target) {
-    // WEIRD: This is different then path, which doesnt include the `full`
-		newEnt.SymlinkPath = FullPath(e.extractedPath(target))
-	} else { // if its relative dont need to change anything
-		newEnt.SymlinkPath = target
-	}
-	// os.Symlink(target, symlink)
-	err := os.Symlink(newEnt.SymlinkPath, FullPath(path))
-	if err != nil {
-		return nil, err
-	}
-  return newEnt, nil
+type FileInfo struct {
+	name      string
+	size      int64
+	mode      os.FileMode
+	modTime   time.Time
+	Md5       string
+	Sha1      string
+	Sha256    string
+	Sha512    string
+	Entropy   float64
+	Type      filetype.Filetype
+	Processed bool
 }
 
-
-//-------------------Tmp--------------------
-func (e *Entry) MoveToTmp() (error) {
-	if e.tmpPath != "" {
-		return fmt.Errorf("Already moved to tmp")
+func NewFileInfo(n *node) FileInfo {
+	return FileInfo{
+		name:      n.name,
+		size:      n.ref.entry.Size,
+		mode:      n.mode,
+		modTime:   n.modTime,
+		Md5:       n.ref.entry.Md5,
+		Sha1:      n.ref.entry.Sha1,
+		Sha256:    n.ref.entry.Sha256,
+		Sha512:    n.ref.entry.Sha512,
+		Entropy:   n.ref.entry.Entropy,
+		Type:      n.ref.entry.Type,
+		Processed: n.ref.entry.Processed.Load(),
 	}
-
-	e.tmpPath = uuid.New().String()
-  return os.Rename(FullPath(e.Path), TmpPath(e.tmpPath))
 }
 
-func (e *Entry) RemoveTmp() (error) {
-	if e.tmpPath == "" {
-		return fmt.Errorf("Already deleted tmp")
-	}
-
-  return os.Remove(TmpPath(e.tmpPath))
+func (mfi FileInfo) Name() string {
+	return mfi.name
 }
-
-func (e *Entry) OpenTmp() (*os.File, error) {
-  return os.Open(TmpPath(e.tmpPath))
+func (mfi FileInfo) Size() int64 {
+	return mfi.size
 }
-//-------------------Tmp--------------------
+func (mfi FileInfo) Mode() os.FileMode {
+	return mfi.mode
+}
+func (mfi FileInfo) ModTime() time.Time {
+	return mfi.modTime
+}
+func (mfi FileInfo) IsDir() bool {
+	return mfi.mode.IsDir()
+}
+func (mfi FileInfo) Sys() any {
+	return nil
+}

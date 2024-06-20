@@ -3,57 +3,58 @@ package cli
 import (
 	// "fmt"
 
-	"github.com/jonathongardner/forklift/fin"
-	"github.com/jonathongardner/forklift/fs"
+	"fmt"
+	"os"
+
 	"github.com/jonathongardner/forklift/box"
+	"github.com/jonathongardner/forklift/fin"
 	"github.com/jonathongardner/forklift/routines"
 
-	"github.com/urfave/cli/v2"
 	log "github.com/sirupsen/logrus"
+	"github.com/urfave/cli/v2"
 )
 
-var extractCommand =  &cli.Command{
+var extractCommand = &cli.Command{
 	Name:      "extract",
 	Usage:     "extract files",
 	ArgsUsage: "[file]",
-	Flags: []cli.Flag {
-		&cli.StringFlag{
-			Name:    "manifest",
-			Aliases: []string{"m"},
-			Usage:   "manifest output (jsonl format)",
-			EnvVars: []string{"FORKLIFT_MANIFEST"},
-		},
+	Flags: []cli.Flag{
 		&cli.StringFlag{
 			Name:    "output",
 			Aliases: []string{"o"},
 			Usage:   "output folder",
-			Value:   fs.Path,
+			Value:   "forklift",
 			EnvVars: []string{"FORKLIFT_OUTPUT"},
 		},
 	},
-	Action:  func(c *cli.Context) error {
-		file := c.Args().Get(0)
-		err := fs.SetupDir(c.String("output"), file)
+	Action: func(c *cli.Context) error {
+		output := c.String("output")
+		err := os.Mkdir(output, 0755)
 		if err != nil {
-			return err
+			return fmt.Errorf("unable to create output directory: %v", err)
 		}
-		defer fs.CleanupDir()
 
-		log.Infof("Starting to unload %v to %v...", file, fs.Path)
+		// Create the DB to start recording info to
+		// db, err := fin.CreateDB(output)
+		// if err != nil {
+		// 	return err
+		// }
+
+		file := c.Args().Get(0)
+		bar, err := box.NewDelivery(output, file)
+		if err != nil {
+			return fmt.Errorf("unable to start scanning: %v", err)
+		}
 
 		routineController := routines.NewController()
-		err = fin.Setup(c.String("manifest"), routineController)
-		if err != nil {
-			return err
-		}
-
-		bar, err := box.NewBarcode(file)
-		if err != nil {
-			return err
-		}
-
+		log.Infof("Starting to unload %v to %v...", file, output)
 		routineController.Go(bar)
 
-		return routineController.IsFinished()
+		err = routineController.IsFinished()
+		if err != nil {
+			return err
+		}
+
+		return fin.Save(output, bar.VirtualFS())
 	},
 }

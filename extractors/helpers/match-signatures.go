@@ -1,6 +1,6 @@
-package extractors
+package helpers
 
-func matchSig(raw []byte, toMatch []byte, offset int) bool {
+func MatchSig(raw []byte, toMatch []byte, offset int) bool {
 	if len(raw) < offset+len(toMatch) {
 		return false
 	}
@@ -14,16 +14,16 @@ func matchSig(raw []byte, toMatch []byte, offset int) bool {
 	return true
 }
 
-func matchSigFunc(toMatch []byte, offset int) func(raw []byte, limit uint32) bool {
+func MatchSigFunc(toMatch []byte, offset int) func(raw []byte, limit uint32) bool {
 	return func(raw []byte, limit uint32) bool {
-		return matchSig(raw, toMatch, offset)
+		return MatchSig(raw, toMatch, offset)
 	}
 }
 
-func matchSigMultiOffsetFunc(toMatch []byte, offsets []int) func(raw []byte, limit uint32) bool {
+func MatchSigMultiOffsetFunc(toMatch []byte, offsets []int) func(raw []byte, limit uint32) bool {
 	return func(raw []byte, limit uint32) bool {
 		for i := 0; i < len(offsets); i++ {
-			if matchSig(raw, toMatch, offsets[i]) {
+			if MatchSig(raw, toMatch, offsets[i]) {
 				return true
 			}
 		}

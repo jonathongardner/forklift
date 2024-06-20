@@ -1,108 +1,56 @@
 package box
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/jonathongardner/forklift/extractors"
 	"github.com/jonathongardner/forklift/fs"
-	"github.com/jonathongardner/forklift/fin"
 	"github.com/jonathongardner/forklift/routines"
-
 	log "github.com/sirupsen/logrus"
 )
 
+// Scan a pacakges barcode to figureout what in it
+// and decide to open/extract or not
 type Barcode struct {
-	entry *fs.Entry
+	virtualFS *fs.Virtual
 }
 
-func NewBarcode(pathToExtract string) (*Barcode, error) {
-	// defaults
-	reader := os.Stdin
-	mode := os.FileMode(0700)
-	path := "forklift"
-
-	if pathToExtract != "" {
-		path = filepath.Base(pathToExtract)
-		fileToCopy, err := os.Open(pathToExtract)
-		if err != nil {
-			return nil, fmt.Errorf("Couldn't open path (%v) - %v", pathToExtract, err)
-		}
-		defer fileToCopy.Close()
-
-		fileInfo, err := fileToCopy.Stat()
-		if err != nil {
-			return nil, fmt.Errorf("Couldn't get path info (%v) - %v", pathToExtract, err)
-		}
-		mode = mode | fileInfo.Mode()
-
-		if fileInfo.IsDir() {
-			return nil, fmt.Errorf("Must provide a file (not a directory)")
-		}
-		reader = fileToCopy
-	}
-
-	parentEnt := &fs.Entry{Path: ""}
-	ent, err := parentEnt.ExtractedFile(path, mode, reader)
+// This is to start scanning/extracting files. New delivery returns a barcode
+// that we can decide how to handle
+func NewDelivery(output, toExtract string) (*Barcode, error) {
+	virtualFS, err := fs.NewVirtual(output, toExtract)
 	if err != nil {
-		return nil, fmt.Errorf("Error extracting file - %v", err)
+		return nil, err
 	}
-	return &Barcode{entry: ent}, nil
+	// defaults
+	return &Barcode{virtualFS: virtualFS}, nil
 }
 
-func (b *Barcode) addToManifest() {
-	jsonByte, _ := json.Marshal(b.entry)
-	fin.AddFile(jsonByte)
+func (b *Barcode) VirtualFS() *fs.Virtual {
+	return b.virtualFS
 }
 
 // Needed for routine runnable
+// "Scan" the barcode and decide if need to extract
 func (b *Barcode) Run(rc *routines.Controller) error {
-	defer b.addToManifest()
-	e := b.entry
-
-	if e.Processed {
-		// dont process if already done, this can happen if extractor auto processes dir
-		return nil
-	}
-	e.Processed = true
-
-	if e.SymlinkPath != "" {
-		// dont process symlinks cause we will process actual file
+	// This return error if root node already extracted, so if already extracted just move on
+	err := b.virtualFS.RootProcess()
+	if err != nil {
 		return nil
 	}
 
-	if e.Type.Mimetype == "" {
-		// We should set the initial type when we copy the file
-		panic("Types cant be blank")
-	}
-
-	extFunc, ok := extractors.Functions[e.Type.Mimetype]
+	typ := b.virtualFS.RootType()
+	extFunc, ok := extractors.Functions[typ.Mimetype]
+	log.Debugf("Extractions %v %v %v", ok, typ.Mimetype, b.virtualFS.RootErrorID())
 
 	if ok {
-		err := e.MoveToTmp()
+		err := extFunc(b.virtualFS)
 		if err != nil {
-			return fmt.Errorf("Error moving files to tmp %v %v - %v", e.Path, e.Type, err)
+			return fmt.Errorf("couldn't extract entry (%v) - %v", b.virtualFS.RootErrorID(), err)
 		}
-
-		entries, err := extFunc(e)
-		if err != nil {
-			return fmt.Errorf("Error extraction file %v %v - %v", e.Path, e.Type, err)
+		for _, childrenFS := range b.virtualFS.VirtualChildren() {
+			rc.Go(&Barcode{virtualFS: childrenFS})
 		}
-		for _, entry := range entries {
-			rc.Go(&Barcode{ entry: entry })
-		}
-
-		err = e.RemoveTmp()
-		if err != nil {
-			return fmt.Errorf("Error deleting tmp file %v %v - %v", e.Path, e.Type, err)
-		}
-
-		e.Extracted = true
-	} else {
-		log.Debugf("Unknown type %v %v", e.Path, e.Type)
 	}
-
 	return nil
 }

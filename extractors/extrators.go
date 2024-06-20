@@ -1,48 +1,27 @@
 package extractors
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
-
-	"github.com/jonathongardner/forklift/fs"
+	"github.com/jonathongardner/forklift/extractors/directory"
+	// "github.com/jonathongardner/forklift/extractors/gzip"
+	"github.com/jonathongardner/forklift/extractors/helpers"
+	"github.com/jonathongardner/forklift/extractors/libarchive"
 	// log "github.com/sirupsen/logrus"
 )
 
-type extratFunc func(*fs.Entry) ([]*fs.Entry, error)
-
-var Functions = make(map[string]extratFunc)
+var Functions = make(map[string]helpers.ExtratFunc)
 var Types []string
 
 // extracts to folder
-func addExtractor(mtype string, ext extratFunc) {
+func addExtractor(mtype string, ext helpers.ExtratFunc) {
+	if _, ok := Functions[mtype]; ok {
+		panic("extractor already exists")
+	}
 	Functions[mtype] = ext
 	Types = append(Types, mtype)
 }
 
-func mapEntriesToFiles(entry *fs.Entry, entries map[string]*fs.Entry) ([]*fs.Entry, error) {
-	toReturn := make([]*fs.Entry, 0)
-	root := entry.FullPath()
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if root == path {
-			return nil
-		}
-
-		ent, ok := entries[path]
-		if !ok {
-			return fmt.Errorf("entry not found for %s", path)
-		}
-		if info.IsDir() {
-			ent.Processed = true
-			ent.Extracted = true
-		}
-		ent.UpdateParent(entries[ent.FullPathDir()])
-		toReturn = append(toReturn, ent)
-		return nil
-	})
-
-	return toReturn, err
+func init() {
+	directory.Add(addExtractor)
+	// gzip.Add(addExtractor)
+	libarchive.Add(addExtractor)
 }
