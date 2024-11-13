@@ -11,3 +11,8 @@ forklift --help
 go run main.go --help
 go run build
 ```
+### Dockerfile
+```
+docker build -t forklift:dev -f Dockerfile.dev .
+docker run --rm -v $PWD:/app -it forklift:dev /bin/sh
+```

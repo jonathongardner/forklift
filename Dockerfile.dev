@@ -15,15 +15,3 @@ RUN go mod download
 
 # Copy the rest of the application source code
 COPY . .
-
-# Build the Go project statically
-RUN CGO_ENABLED=1 go build -ldflags '-extldflags="-static"'
-
-# # Use the Chainguard static image for the final stage
-# FROM scratch
-
-# # Copy the statically compiled binary from the builder stage
-# COPY --from=builder /app/forklift .
-
-# # Set the entrypoint to the compiled binary
-# ENTRYPOINT ["/forklift"]
