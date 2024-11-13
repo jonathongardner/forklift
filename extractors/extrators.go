@@ -5,6 +5,7 @@ import (
 	// "github.com/jonathongardner/forklift/extractors/gzip"
 	"github.com/jonathongardner/forklift/extractors/helpers"
 	"github.com/jonathongardner/forklift/extractors/libarchive"
+	"github.com/jonathongardner/forklift/extractors/qcow2"
 	// log "github.com/sirupsen/logrus"
 )
 
@@ -24,4 +25,5 @@ func init() {
 	directory.Add(addExtractor)
 	// gzip.Add(addExtractor)
 	libarchive.Add(addExtractor)
+	qcow2.Add(addExtractor)
 }
