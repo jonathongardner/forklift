@@ -5,14 +5,9 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/jonathongardner/forklift/extractors/helpers"
 	"github.com/jonathongardner/virtualfs"
 	// log "github.com/sirupsen/logrus"
 )
-
-func Add(add func(string, helpers.ExtratFunc)) {
-	add("application/gzip", ExtractArchive)
-}
 
 func ExtractArchive(virtualFS *virtualfs.Fs) error {
 	rf, err := virtualFS.Open("/")

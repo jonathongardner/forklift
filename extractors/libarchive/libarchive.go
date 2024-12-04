@@ -5,49 +5,11 @@ import (
 	"io"
 	"io/fs"
 
-	"github.com/jonathongardner/forklift/extractors/helpers"
-
 	"github.com/jonathongardner/virtualfs"
 
 	"github.com/jonathongardner/libarchive"
 	log "github.com/sirupsen/logrus"
 )
-
-func Add(add func(string, helpers.ExtratFunc)) {
-	supportedCompressions := []string{
-		"application/gzip",
-		"application/x-bzip2",
-		"application/x-xz",
-		"application/lzip",
-		// "application/x-lzma"
-	}
-
-	for _, t := range supportedCompressions {
-		add(t, ExtractArchive)
-	}
-
-	supportedArchives := []string{
-		"application/x-tar",
-		// "application/x-pax",
-		"application/x-cpio",
-		iso9660,
-		"application/zip",
-		// "application/mtree",
-		// "application/ar",
-		// "application/raw",
-		"application/x-xar",
-		// "application/lha",
-		// "application/lzh",
-		"application/x-rar-compressed",
-		"application/vnd.ms-cab-compressed",
-		"application/x-7z-compressed",
-		"application/warc",
-	}
-
-	for _, t := range supportedArchives {
-		add(t, ExtractArchive)
-	}
-}
 
 func ExtractArchive(virtualFS *virtualfs.Fs) error {
 	// log.Infof("extracting tar %v", entry.Name)

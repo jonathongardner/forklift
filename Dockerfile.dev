@@ -1,8 +1,7 @@
-FROM alpine:latest AS builder
-# FROM cgr.dev/chainguard/go as builder
+FROM golang:1.23.3-alpine3.20
 
 # Install build dependencies
-RUN apk update && apk add --no-cache --update-cache build-base openssl-dev libarchive-dev go
+RUN apk update && apk add --no-cache --update-cache build-base openssl-dev libarchive-dev
 
 # Set the working directory
 WORKDIR /app
