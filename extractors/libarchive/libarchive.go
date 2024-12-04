@@ -30,7 +30,6 @@ func Add(add func(string, helpers.ExtratFunc)) {
 		"application/x-tar",
 		// "application/x-pax",
 		"application/x-cpio",
-		iso9660,
 		"application/zip",
 		// "application/mtree",
 		// "application/ar",

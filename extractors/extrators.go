@@ -4,6 +4,7 @@ import (
 	"github.com/jonathongardner/forklift/extractors/directory"
 	// "github.com/jonathongardner/forklift/extractors/gzip"
 	"github.com/jonathongardner/forklift/extractors/helpers"
+	"github.com/jonathongardner/forklift/extractors/iso9660"
 	"github.com/jonathongardner/forklift/extractors/libarchive"
 	// log "github.com/sirupsen/logrus"
 )
@@ -23,5 +24,6 @@ func addExtractor(mtype string, ext helpers.ExtratFunc) {
 func init() {
 	directory.Add(addExtractor)
 	// gzip.Add(addExtractor)
+	iso9660.Add(addExtractor)
 	libarchive.Add(addExtractor)
 }
