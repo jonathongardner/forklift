@@ -1,5 +1,5 @@
 # Extractors
-To Add a new extractor, create a new subpackage:
+To Add a new extractor, create a new subpackage in extractors:
 ```go
 package NAME
 
@@ -8,14 +8,10 @@ import (
 	"io"
 
 	"github.com/jonathongardner/forklift/extractors/helpers"
-	<!-- log "github.com/sirupsen/logrus" -->
+	// log "github.com/sirupsen/logrus"
 
 	"github.com/jonathongardner/forklift/fs"
 )
-
-func Add(add func(string, helpers.ExtratFunc)) {
-		add("...", ExtractArchive)
-}
 
 func ExtractArchive(virtualFS *fs.Virtual) error {
 	f, err := virtualFS.RootOpen()
@@ -28,4 +24,23 @@ func ExtractArchive(virtualFS *fs.Virtual) error {
 
 	return nil
 }
+```
+
+Then add it to the `extractors.go` file
+```go
+package extractors
+
+import (
+	...
+	"github.com/jonathongardner/forklift/extractors/NAME"
+)
+...
+
+
+
+
+func init() {
+	//-----------------NAME-----------------
+	{"some/content/type", NAME.ExtractArchive},
+	//-----------------NAME-----------------
 ```

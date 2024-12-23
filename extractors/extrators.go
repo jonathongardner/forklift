@@ -5,7 +5,7 @@ import (
 	"github.com/jonathongardner/virtualfs/filetype"
 
 	// "github.com/jonathongardner/forklift/extractors/gzip"
-	"github.com/jonathongardner/forklift/extractors/gdiskfs"
+	"github.com/jonathongardner/forklift/extractors/diskfs"
 	"github.com/jonathongardner/forklift/extractors/helpers"
 	"github.com/jonathongardner/forklift/extractors/libarchive"
 	// log "github.com/sirupsen/logrus"
@@ -34,9 +34,10 @@ func init() {
 		{filetype.Dir.Mimetype, directory.ExtractDir},
 		//-----------------directory-----------------
 
-		//-----------------gdiskfs-----------------
-		{gdiskfs.SquashFS, gdiskfs.ExtractArchive},
-		//-----------------gdiskfs-----------------
+		//-----------------diskfs-----------------
+		{diskfs.SquashFS, diskfs.ExtractArchive},
+		{libarchive.Iso9660, diskfs.ExtractArchive},
+		//-----------------diskfs-----------------
 
 		//-----------------libarchive-----------------
 		// compressions
@@ -61,7 +62,7 @@ func init() {
 		{"application/vnd.ms-cab-compressed", libarchive.ExtractArchive},
 		{"application/x-7z-compressed", libarchive.ExtractArchive},
 		{"application/warc", libarchive.ExtractArchive},
-		{libarchive.Iso9660, libarchive.ExtractArchive},
+		// {libarchive.Iso9660, libarchive.ExtractArchive},
 		//-----------------libarchive-----------------
 
 		//-----------------gzip-----------------
