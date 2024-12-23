@@ -1,4 +1,4 @@
-package gdiskfs
+package diskfs
 
 import (
 	"github.com/gabriel-vasile/mimetype"

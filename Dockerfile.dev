@@ -1,7 +1,7 @@
 FROM golang:1.23.3-alpine3.20
 
 # Install build dependencies
-RUN apk update && apk add --no-cache --update-cache build-base openssl-dev libarchive-dev
+RUN apk update && apk add --no-cache --update-cache build-base openssl-dev libarchive-dev git
 
 # Set the working directory
 WORKDIR /app
