@@ -1,4 +1,4 @@
-package libarchive
+package tar
 
 import (
 	"github.com/gabriel-vasile/mimetype"

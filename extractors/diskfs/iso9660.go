@@ -1,4 +1,4 @@
-package libarchive
+package diskfs
 
 import (
 	"github.com/gabriel-vasile/mimetype"

@@ -1,3 +1,6 @@
+//go:build libarchive
+// +build libarchive
+
 package libarchive
 
 import (

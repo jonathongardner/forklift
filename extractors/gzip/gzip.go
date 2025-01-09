@@ -9,7 +9,7 @@ import (
 	// log "github.com/sirupsen/logrus"
 )
 
-func ExtractArchive(virtualFS *virtualfs.Fs) error {
+func Extract(virtualFS *virtualfs.Fs) error {
 	rf, err := virtualFS.Open("/")
 	if err != nil {
 		return err
