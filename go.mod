@@ -6,9 +6,9 @@ toolchain go1.23.3
 
 require (
 	github.com/diskfs/go-diskfs v1.5.0
-	github.com/gabriel-vasile/mimetype v1.4.6
+	github.com/gabriel-vasile/mimetype v1.4.8
 	github.com/jonathongardner/libarchive v0.0.0-20240814185856-047f3efea4c8
-	github.com/jonathongardner/virtualfs v0.0.0-20241116032503-58df2d3b2f01
+	github.com/jonathongardner/virtualfs v0.0.1
 	github.com/sirupsen/logrus v1.9.4-0.20230606125235-dd1b4c2e81af
 	github.com/urfave/cli/v2 v2.27.3
 )
@@ -24,8 +24,8 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/ulikunitz/xz v0.5.12 // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
-	golang.org/x/net v0.31.0 // indirect
-	golang.org/x/sys v0.27.0 // indirect
+	golang.org/x/net v0.34.0 // indirect
+	golang.org/x/sys v0.29.0 // indirect
 )
 
 replace github.com/diskfs/go-diskfs => github.com/jonathongardner/go-diskfs v0.0.0-20250106120634-a3bf8eaac8b6

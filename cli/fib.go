@@ -37,7 +37,7 @@ var fibCommand = &cli.Command{
 		output := c.String("output")
 		fileArchive := c.Args().Get(0)
 
-		virtualFS, err := virtualfs.NewFsFromDir(output)
+		virtualFS, err := virtualfs.NewFsFromDb(output)
 		if err != nil {
 			return fmt.Errorf("unable to create virtual filesystem: %v", err)
 		}

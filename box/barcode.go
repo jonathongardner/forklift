@@ -28,8 +28,9 @@ func (b *Barcode) VirtualFS() *virtualfs.Fs {
 // Needed for routine runnable
 // "Scan" the barcode and decide if need to extract
 func (b *Barcode) Run(rc *routines.Controller) error {
-	// This return error if root node already extracted, so if already extracted just move on
-	err := b.virtualFS.Process()
+	// This return error if value is already set (i.e. another process already extracted)
+	// so if already extracted just move on
+	err := b.virtualFS.TagSIfBlank("proccessed", true)
 	if err != nil {
 		return nil
 	}
@@ -44,7 +45,8 @@ func (b *Barcode) Run(rc *routines.Controller) error {
 	log.Debugf("Extractions %v %v %v", ok, typ.Mimetype, b.virtualFS.ErrorId())
 
 	if ok {
-		b.virtualFS.Extract()
+		// TODO: change extract function to return a name and a function and set the name here
+		b.virtualFS.TagS("Extracted", true)
 		err := extFunc(b.virtualFS)
 		if err != nil {
 			b.virtualFS.Error(err)
