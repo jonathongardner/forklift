@@ -16,6 +16,16 @@ import (
 	// log "github.com/sirupsen/logrus"
 )
 
+// extracts to folder
+func overwriteExtractor(ext extractor) {
+	if _, ok := Functions[ext.mtype]; ok {
+		log.Warn("libarchive overwriting %v" ext.mtype)
+	} else {
+		log.Warn("libarchive new support %v" ext.mtype)
+	}
+	Functions[ext.mtype] = ext.ext
+}
+
 func init() {
 	toAdd := []extractor{
 		//-----------------libarchive-----------------
@@ -44,6 +54,6 @@ func init() {
 		//-----------------libarchive-----------------
 	}
 	for _, t := range toAdd {
-		addExtractor(t)
+		overwriteExtractor(t)
 	}
 }
