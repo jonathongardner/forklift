@@ -4,8 +4,11 @@
 package extractors
 
 import (
+	"github.com/jonathongardner/forklift/extractors/compress"
+	"github.com/jonathongardner/forklift/extractors/cpio"
 	"github.com/jonathongardner/forklift/extractors/diskfs"
 	"github.com/jonathongardner/forklift/extractors/tar"
+	"github.com/jonathongardner/forklift/extractors/zip"
 
 	// "github.com/jonathongardner/forklift/extractors/gzip"
 
@@ -17,17 +20,17 @@ func init() {
 	toAdd := []extractor{
 		//-----------------libarchive-----------------
 		// compressions
-		{"application/gzip", libarchive.ExtractArchive},
-		{"application/x-bzip2", libarchive.ExtractArchive},
-		{"application/x-xz", libarchive.ExtractArchive},
-		{"application/lzip", libarchive.ExtractArchive},
-		// {"application/x-lzma", libarchive.ExtractArchive},
+		{compress.Gzip, libarchive.ExtractArchive},
+		{compress.Bzip2, libarchive.ExtractArchive},
+		{compress.Xz, libarchive.ExtractArchive},
+		{compress.Lzip, libarchive.ExtractArchive},
+		{compress.Lzma, libarchive.ExtractArchive},
 		// archives
-		{"application/x-tar", libarchive.ExtractArchive},
+		{tar.Tar, libarchive.ExtractArchive},
 		{tar.TarGz, libarchive.ExtractArchive},
 		// {"application/x-pax", libarchive.ExtractArchive},
-		{"application/x-cpio", libarchive.ExtractArchive},
-		{"application/zip", libarchive.ExtractArchive},
+		{cpio.Cpio, libarchive.ExtractArchive},
+		{zip.Zip, libarchive.ExtractArchive},
 		// {"application/mtree", libarchive.ExtractArchive},
 		// {"application/ar", libarchive.ExtractArchive},
 		// {"application/raw", libarchive.ExtractArchive},

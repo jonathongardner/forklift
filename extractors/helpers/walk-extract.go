@@ -47,3 +47,37 @@ func ExtSymlink(virtualFS *virtualfs.Fs, symlink, name string, mode fs.FileMode,
 func ExtUnsuported(name string, mode fs.FileMode) error {
 	return fmt.Errorf("unsupported mode %v for %v", mode, name)
 }
+
+func ExtractCompression(virtualFS *virtualfs.Fs, cf func(io.Reader) (io.Reader, error)) error {
+	rf, err := virtualFS.Open("/")
+	if err != nil {
+		return err
+	}
+	defer rf.Close()
+
+	fi, err := virtualFS.Stat("/")
+	if err != nil {
+		return fmt.Errorf("couldn't get root file stats %v - %v", virtualFS.ErrorId(), err)
+	}
+
+	f, err := virtualFS.CreateChild(fi.Mode(), fi.ModTime())
+	if err != nil {
+		return fmt.Errorf("couldn't create extracted file %v - %v", virtualFS.ErrorId(), err)
+	}
+
+	r, err := cf(rf)
+	if err != nil {
+		return fmt.Errorf("couldn't open compression file %v - %v", virtualFS.ErrorId(), err)
+	}
+
+	_, err = io.Copy(f, r)
+	err2 := f.Close()
+	if err != nil {
+		return fmt.Errorf("couldn't copy file %v - %v", virtualFS.ErrorId(), err)
+	}
+	if err2 != nil {
+		return fmt.Errorf("couldn't close file %v - %v", virtualFS.ErrorId(), err2)
+	}
+
+	return nil
+}

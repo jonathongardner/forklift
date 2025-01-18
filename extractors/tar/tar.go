@@ -2,7 +2,6 @@ package tar
 
 import (
 	"archive/tar"
-	"compress/gzip"
 	"fmt"
 	"io"
 
@@ -10,19 +9,7 @@ import (
 	"github.com/jonathongardner/virtualfs"
 )
 
-func ExtractGzip(virtualFS *virtualfs.Fs) error {
-	f, err := virtualFS.Open("/")
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	gzipReader, err := gzip.NewReader(f)
-	if err != nil {
-		return fmt.Errorf("could not open gzip reader (%v)", err)
-	}
-	return extract(virtualFS, gzipReader)
-}
+const Tar = "application/x-tar"
 
 func Extract(virtualFS *virtualfs.Fs) error {
 	f, err := virtualFS.Open("/")
