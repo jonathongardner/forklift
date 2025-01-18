@@ -25,7 +25,6 @@ func init() {
 		//-----------------tar-----------------
 		{tar.Tar, tar.Extract},
 		// TODO: think about other compressions... might be able to do it in compression with peek
-		{tar.TarGz, tar.ExtractGzip},
 		//-----------------tar-----------------
 
 		//-----------------cpio-----------------

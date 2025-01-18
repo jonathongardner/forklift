@@ -27,7 +27,6 @@ func init() {
 		{compress.Lzma, libarchive.ExtractArchive},
 		// archives
 		{tar.Tar, libarchive.ExtractArchive},
-		{tar.TarGz, libarchive.ExtractArchive},
 		// {"application/x-pax", libarchive.ExtractArchive},
 		{cpio.Cpio, libarchive.ExtractArchive},
 		{zip.Zip, libarchive.ExtractArchive},
