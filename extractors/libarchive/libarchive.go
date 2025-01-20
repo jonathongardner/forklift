@@ -6,8 +6,8 @@ package libarchive
 import (
 	"fmt"
 	"io"
-	"io/fs"
 
+	"github.com/jonathongardner/forklift/extractors/helpers"
 	"github.com/jonathongardner/virtualfs"
 
 	"github.com/jonathongardner/libarchive"
@@ -81,32 +81,16 @@ func saveArchive(virtualFS *virtualfs.Fs, header libarchive.ArchiveEntry, r *lib
 	log.Debugf("extracting %v", name)
 
 	if mode.IsDir() {
-		err := virtualFS.MkdirP(name, mode, mtime)
-		if err != nil {
-			return fmt.Errorf("couldn't extract directory %v (%v) - %v", name, virtualFS.ErrorId(), err)
-
-		}
-	} else if mode.IsRegular() {
-		f, err := virtualFS.Create(name, mode, mtime)
-		if err != nil {
-			return fmt.Errorf("couldn't create file %v (%v) - %v", name, virtualFS.ErrorId(), err)
-		}
-		_, err = io.Copy(f, r)
-		err2 := f.Close()
-		if err != nil {
-			return fmt.Errorf("couldn't copy file %v (%v) - %v", name, virtualFS.ErrorId(), err)
-		}
-		if err2 != nil {
-			return fmt.Errorf("couldn't close file %v (%v) - %v", name, virtualFS.ErrorId(), err2)
-		}
-	} else if (mode & fs.ModeSymlink) == fs.ModeSymlink {
-		err := virtualFS.Symlink(header.Symlink(), name, mode, mtime)
-		if err != nil {
-			return fmt.Errorf("couldn't create symlink %v (%v) - %v", name, virtualFS.ErrorId(), err)
-		}
-	} else {
-		return fmt.Errorf("unsupported mode %v for %v", mode, name)
+		return helpers.ExtDir(virtualFS, name, mode, mtime)
+	}
+	if mode.IsRegular() {
+		return helpers.ExtRegular(virtualFS, name, mode, mtime, r)
+	}
+	if helpers.IsSymLink(mode) {
+		return helpers.ExtSymlink(virtualFS, header.Symlink(), name, mode, mtime)
 	}
 
-	return nil
+	// err := helpers.ExtUnsuported(name, mode)
+	// virtualFS.Warning(err)
+	return helpers.ExtUnsuported(name, mode)
 }

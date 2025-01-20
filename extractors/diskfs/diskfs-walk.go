@@ -1,6 +1,7 @@
 package diskfs
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -76,6 +77,46 @@ func DiskFsWalk(fs filesystem.FileSystem, virtualFS *virtualfs.Fs) error {
 			}
 
 			return helpers.ExtRegular(virtualFS, name, mode, mtime, r)
+		}
+		if helpers.IsCharacterDevice(mode) {
+			// r, err := fs.OpenFile(name, os.O_RDONLY)
+			// if err != nil {
+			// 	return fmt.Errorf("couldnt open file %v", err)
+			// }
+			r := bytes.NewReader([]byte{})
+
+			err := helpers.ExtRegular(virtualFS, name, mode, mtime, r)
+			if err != nil {
+				return err
+			}
+
+			newFs, err := virtualFS.FsFrom(name)
+			if err != nil {
+				return fmt.Errorf("error getting new filesystem for tags %v", err)
+			}
+
+			newFs.TagS("type", "character-device")
+			return nil
+		}
+		if helpers.IsDevice(mode) {
+			// r, err := fs.OpenFile(name, os.O_RDONLY)
+			// if err != nil {
+			// 	return fmt.Errorf("couldnt open file %v", err)
+			// }
+			r := bytes.NewReader([]byte{})
+
+			err := helpers.ExtRegular(virtualFS, name, mode, mtime, r)
+			if err != nil {
+				return err
+			}
+
+			newFs, err := virtualFS.FsFrom(name)
+			if err != nil {
+				return fmt.Errorf("error getting new filesystem for tags %v", err)
+			}
+
+			newFs.TagS("type", "device")
+			return nil
 		}
 		if helpers.IsSymLink(mode) {
 			value, ok := info.(linkable)

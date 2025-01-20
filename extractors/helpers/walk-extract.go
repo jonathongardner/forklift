@@ -13,6 +13,18 @@ func IsSymLink(mode fs.FileMode) bool {
 	return (mode & fs.ModeSymlink) == fs.ModeSymlink
 }
 
+func IsDir(mode fs.FileMode) bool {
+	return (mode & fs.ModeDir) == fs.ModeDir
+}
+
+func IsDevice(mode fs.FileMode) bool {
+	return (mode & fs.ModeDevice) == fs.ModeDevice
+}
+
+func IsCharacterDevice(mode fs.FileMode) bool {
+	return (mode & (fs.ModeDevice | fs.ModeCharDevice)) == (fs.ModeDevice | fs.ModeCharDevice)
+}
+
 func ExtDir(virtualFS *virtualfs.Fs, name string, mode fs.FileMode, mtime time.Time) error {
 	err := virtualFS.MkdirP(name, mode, mtime)
 	if err != nil {
