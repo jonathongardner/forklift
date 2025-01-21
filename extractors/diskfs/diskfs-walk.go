@@ -15,7 +15,7 @@ import (
 )
 
 type linkable interface {
-	ReadLink() (string, bool)
+	Readlink() (string, error)
 }
 
 func ExtractArchive(virtualFS *virtualfs.Fs) error {
@@ -28,8 +28,6 @@ func ExtractArchive(virtualFS *virtualfs.Fs) error {
 	if err != nil {
 		return fmt.Errorf("error getting backend %v", err)
 	}
-	// set the partition table if we can
-	disk.GetPartitionTable()
 
 	if disk.Table == nil {
 		fs, err := disk.GetFilesystem(0)
@@ -40,6 +38,7 @@ func ExtractArchive(virtualFS *virtualfs.Fs) error {
 		if err != nil {
 			return fmt.Errorf("error walking filesystem %v", err)
 		}
+		return nil
 	}
 
 	partitions := disk.Table.GetPartitions()
@@ -84,58 +83,27 @@ func DiskFsWalk(fs filesystem.FileSystem, virtualFS *virtualfs.Fs) error {
 
 			return helpers.ExtRegular(virtualFS, name, mode, mtime, r)
 		}
-		if helpers.IsCharacterDevice(mode) {
+		if helpers.IsDevice(mode) || helpers.IsCharacterDevice(mode) {
 			// r, err := fs.OpenFile(name, os.O_RDONLY)
 			// if err != nil {
 			// 	return fmt.Errorf("couldnt open file %v", err)
 			// }
 			r := bytes.NewReader([]byte{})
 
-			err := helpers.ExtRegular(virtualFS, name, mode, mtime, r)
-			if err != nil {
-				return err
-			}
-
-			newFs, err := virtualFS.FsFrom(name)
-			if err != nil {
-				return fmt.Errorf("error getting new filesystem for tags %v", err)
-			}
-
-			newFs.TagS("type", "character-device")
-			return nil
+			return helpers.ExtRegular(virtualFS, name, mode, mtime, r)
 		}
-		if helpers.IsDevice(mode) {
-			// r, err := fs.OpenFile(name, os.O_RDONLY)
-			// if err != nil {
-			// 	return fmt.Errorf("couldnt open file %v", err)
-			// }
-			r := bytes.NewReader([]byte{})
+		// if helpers.IsSymLink(mode) {
+		// 	value, ok := info.(linkable)
+		// 	if !ok {
+		// 		return fmt.Errorf("Not able to cast as link")
+		// 	}
+		// 	symlink, err := value.Readlink()
+		// 	if err != nil {
+		// 		return fmt.Errorf("not able to get link %v", err)
+		// 	}
 
-			err := helpers.ExtRegular(virtualFS, name, mode, mtime, r)
-			if err != nil {
-				return err
-			}
-
-			newFs, err := virtualFS.FsFrom(name)
-			if err != nil {
-				return fmt.Errorf("error getting new filesystem for tags %v", err)
-			}
-
-			newFs.TagS("type", "device")
-			return nil
-		}
-		if helpers.IsSymLink(mode) {
-			value, ok := info.(linkable)
-			if !ok {
-				return fmt.Errorf("Not able to cast as link")
-			}
-			symlink, ok := value.ReadLink()
-			if !ok {
-				return fmt.Errorf("Not able to get link")
-			}
-
-			return helpers.ExtSymlink(virtualFS, symlink, name, mode, mtime)
-		}
+		// 	return helpers.ExtSymlink(virtualFS, symlink, name, mode, mtime)
+		// }
 		err := helpers.ExtUnsuported(name, mode)
 		virtualFS.Warning(err)
 		return nil

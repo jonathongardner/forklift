@@ -2,6 +2,7 @@ package box
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/jonathongardner/forklift/extractors"
 	"github.com/jonathongardner/forklift/routines"
@@ -46,8 +47,10 @@ func (b *Barcode) Run(rc *routines.Controller) error {
 
 	if ok {
 		// TODO: change extract function to return a name and a function and set the name here
-		b.virtualFS.TagS("Extracted", true)
+		b.virtualFS.TagS("extracted", true)
+		start := time.Now()
 		err := extFunc(b.virtualFS)
+		b.virtualFS.TagS("elapsed", time.Since(start).Seconds())
 		if err != nil {
 			b.virtualFS.Error(err)
 			return nil
