@@ -36,30 +36,36 @@ func ExtractArchive(virtualFS *virtualfs.Fs) error {
 		if err != nil {
 			return fmt.Errorf("error getting filesystem %v", err)
 		}
-		DiskFsWalk(fs, virtualFS)
-	} else {
-		partitions := disk.Table.GetPartitions()
-
-		for i, part := range partitions {
-			log.Debugf("%v - %v %v %v", i, part.UUID(), part.GetStart(), part.GetSize())
-			if part.GetSize() == 0 {
-				continue
-			}
-
-			fs, err := disk.GetFilesystem(i)
-			if err != nil {
-				virtualFS.Warning(fmt.Errorf("error getting filesystem-%v %v", i, err))
-				continue
-			}
-			// newVirtualFs, err := virtualFS.NewFsChild(partion.UUID())
-			// if err != nil {
-			// 	return fmt.Errorf("error getting new filesystem-%v %v", i, err)
-			// }
-			DiskFsWalk(fs, virtualFS)
+		err = DiskFsWalk(fs, virtualFS)
+		if err != nil {
+			return fmt.Errorf("error walking filesystem %v", err)
 		}
-		// return fmt.Errorf("unsupported type")
+	}
+
+	partitions := disk.Table.GetPartitions()
+
+	for i, part := range partitions {
+		log.Debugf("%v - %v %v %v", i, part.UUID(), part.GetStart(), part.GetSize())
+		if part.GetSize() == 0 {
+			continue
+		}
+
+		fs, err := disk.GetFilesystem(i)
+		if err != nil {
+			virtualFS.Warning(fmt.Errorf("error getting filesystem-%v %v", i, err))
+			continue
+		}
+		// newVirtualFs, err := virtualFS.NewFsChild(partion.UUID())
+		// if err != nil {
+		// 	return fmt.Errorf("error getting new filesystem-%v %v", i, err)
+		// }
+		err = DiskFsWalk(fs, virtualFS)
+		if err != nil {
+			return fmt.Errorf("error walking filesystem-%v %v", i, err)
+		}
 	}
 	return nil
+	// return fmt.Errorf("unsupported type")
 }
 
 func DiskFsWalk(fs filesystem.FileSystem, virtualFS *virtualfs.Fs) error {
