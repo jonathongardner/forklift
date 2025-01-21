@@ -22,6 +22,8 @@ github.com/jonathongardner/libarchive v0.0.0-20240814185856-047f3efea4c8 h1:TC1T
 github.com/jonathongardner/libarchive v0.0.0-20240814185856-047f3efea4c8/go.mod h1:AsYXAvP0xpbcI/y8mnaTGReY4IBzFHXO9odqU3Vx4nU=
 github.com/jonathongardner/virtualfs v0.0.1 h1:hGdAEDfCTW9s/uOjtVTUShb7XuV/nmw8tYDDOgdazDY=
 github.com/jonathongardner/virtualfs v0.0.1/go.mod h1:UAQiF6BSEqOqFT4UOWNAq/uXdeVXLpt5gaKU+K9bnJA=
+github.com/jonathongardner/virtualfs v0.0.2 h1:4+qWV0tZEYjpFeV1telMhDPVEbDbTA/XIuQv+3N6ySo=
+github.com/jonathongardner/virtualfs v0.0.2/go.mod h1:UAQiF6BSEqOqFT4UOWNAq/uXdeVXLpt5gaKU+K9bnJA=
 github.com/klauspost/compress v1.17.11 h1:In6xLpyWOi1+C7tXUUWv2ot1QvBjxevKAaI6IXrJmUc=
 github.com/klauspost/compress v1.17.11/go.mod h1:pMDklpSncoRMuLFrf1W9Ss9KT+0rH90U12bZKk7uwG0=
 github.com/pierrec/lz4/v4 v4.1.21 h1:yOVMLb6qSIDP67pl/5F7RepeKYu/VmTyEXvuMI5d9mQ=

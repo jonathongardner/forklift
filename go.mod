@@ -8,7 +8,7 @@ require (
 	github.com/diskfs/go-diskfs v1.5.0
 	github.com/gabriel-vasile/mimetype v1.4.8
 	github.com/jonathongardner/libarchive v0.0.0-20240814185856-047f3efea4c8
-	github.com/jonathongardner/virtualfs v0.0.1
+	github.com/jonathongardner/virtualfs v0.0.2
 	github.com/sirupsen/logrus v1.9.4-0.20230606125235-dd1b4c2e81af
 	github.com/sorairolake/lzip-go v0.3.5
 	github.com/ulikunitz/xz v0.5.12
