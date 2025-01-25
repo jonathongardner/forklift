@@ -92,18 +92,18 @@ func DiskFsWalk(fs filesystem.FileSystem, virtualFS *virtualfs.Fs) error {
 
 			return helpers.ExtRegular(virtualFS, name, mode, mtime, r)
 		}
-		// if helpers.IsSymLink(mode) {
-		// 	value, ok := info.(linkable)
-		// 	if !ok {
-		// 		return fmt.Errorf("Not able to cast as link")
-		// 	}
-		// 	symlink, err := value.Readlink()
-		// 	if err != nil {
-		// 		return fmt.Errorf("not able to get link %v", err)
-		// 	}
+		if helpers.IsSymLink(mode) {
+			value, ok := info.(linkable)
+			if !ok {
+				return fmt.Errorf("Not able to cast as link")
+			}
+			symlink, err := value.Readlink()
+			if err != nil {
+				return fmt.Errorf("not able to get link %v", err)
+			}
 
-		// 	return helpers.ExtSymlink(virtualFS, symlink, name, mode, mtime)
-		// }
+			return helpers.ExtSymlink(virtualFS, symlink, name, mode, mtime)
+		}
 		err := helpers.ExtUnsuported(name, mode)
 		virtualFS.Warning(err)
 		return nil
