@@ -30,4 +30,4 @@ require (
 	golang.org/x/sys v0.29.0 // indirect
 )
 
-replace github.com/diskfs/go-diskfs => github.com/jonathongardner/go-diskfs v0.0.0-20250118013222-672e208f44dd
+replace github.com/diskfs/go-diskfs => github.com/jonathongardner/go-diskfs v0.0.0-20250125020509-6251481bca9f

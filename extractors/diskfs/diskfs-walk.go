@@ -15,7 +15,7 @@ import (
 )
 
 type linkable interface {
-	Readlink() (string, error)
+	ReadLink() (string, bool)
 }
 
 func ExtractArchive(virtualFS *virtualfs.Fs) error {
@@ -95,11 +95,11 @@ func DiskFsWalk(fs filesystem.FileSystem, virtualFS *virtualfs.Fs) error {
 		if helpers.IsSymLink(mode) {
 			value, ok := info.(linkable)
 			if !ok {
-				return fmt.Errorf("Not able to cast as link")
+				return fmt.Errorf("Not able to cast as link %v %#v", name, info)
 			}
-			symlink, err := value.Readlink()
-			if err != nil {
-				return fmt.Errorf("not able to get link %v", err)
+			symlink, ok := value.ReadLink()
+			if !ok {
+				return fmt.Errorf("not able to get link %v", name)
 			}
 
 			return helpers.ExtSymlink(virtualFS, symlink, name, mode, mtime)
